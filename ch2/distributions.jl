@@ -47,7 +47,7 @@ PlutoUI.combine() do Child
 		$(Child(md"_Pick a value for_ ``\mu``"))
 		$(Child(@bind mu Slider(0:0.01:1, show_value=true)))
 		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N Slider(1:100, show_value=true)))
+		$(Child(@bind N_binom Slider(1:100, show_value=true)))
 	""")
 end
 
@@ -68,7 +68,7 @@ begin
 		xlabel!("$(md"``x``")")
 	end
 
-	binom_plot(mu, N)
+	binom_plot(mu, N_binom)
 end
 
 # ╔═╡ 8ad17213-ff54-4f58-be56-93635c03b4ab
@@ -91,6 +91,52 @@ This distribution is a generalization of the Bernoulli distribution (when there 
 where the ``k``'th element of ``\boldsymbol{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
 """
 
+# ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
+PlutoUI.combine() do Child
+	@htl("""
+		$(Child(md"_Pick a value for_ ``K``"))
+		$(Child(@bind K Slider(1:1:10, show_value=true)))
+		$(Child(md"_Pick a value for_ ``N``"))
+		$(Child(@bind N_multinom Slider(1:1:100, show_value=true)))
+	""")
+end
+
+# ╔═╡ 4a8e0817-6912-41bc-9b37-4e31deab85d9
+@bind inputvals PlutoUI.combine() do Child
+	@htl("""
+		$(Child("prompt", md"_Pick weights for each_ ``\theta_k``"))
+
+		<div>
+			$([ @htl("""
+				<div style="display:flex;flex-direction:row">
+					$(Child("theta$(i)", Slider(0.01:0.01:1,default=1, show_value=true)))
+				</div>
+			""")
+			for i in 1:K])
+		</div>
+	""")
+	
+end
+
+# ╔═╡ f703e482-7599-4fb5-a7fa-ae61b3053494
+begin
+	thetas = zeros(K)	
+	for i in 1:K
+		thetas[i] = inputvals[Symbol("theta$i")]
+	end
+
+	totalsum = sum(thetas)
+
+	divisions = zeros(K)
+
+	runningtotal = 0
+	for i in 1:K
+		divisions[i] = runningtotal
+		runningtotal += thetas[i] / totalsum
+	end
+
+end
+
 # ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
 begin
 	function multinom_plot(divisions, N)
@@ -108,14 +154,17 @@ begin
 				end
 			end
 		end
-		heatmap(results)
+		heatmap(results, colorbar_title="count over iterations")
 
 	end
 
 	# args are: cutoffs for each discrete value when mapped from [0, 1], number of trials
-	multinom_plot([0, 0.1, .7], 100)
+	multinom_plot(divisions, N_multinom)
 
 	title!("Multinomial distribution with $(num_iterations) iterations")
+	ylabel!("$(md"``k``")")
+	xlabel!("trial num")
+	
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1225,12 +1274,15 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─25850900-1af5-11ef-32e8-65af8382c8a3
+# ╠═25850900-1af5-11ef-32e8-65af8382c8a3
 # ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
 # ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╠═15dae776-aecb-4c40-bf90-41e76567d664
+# ╟─15dae776-aecb-4c40-bf90-41e76567d664
 # ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
-# ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
+# ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
+# ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
+# ╟─f703e482-7599-4fb5-a7fa-ae61b3053494
+# ╟─d8c9f643-cfc5-4371-938c-0b0f4836daab
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
