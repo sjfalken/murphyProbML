@@ -74,8 +74,6 @@ end
 # ╔═╡ 8ad17213-ff54-4f58-be56-93635c03b4ab
 md"""
 ##### (2.2.1.2) Categorical and multinomial distributions
-As 
-
 Let ``x \in \{1, 2, \ldots, K\}``. then the **categorical distribution** is defined by: 
 ```math
 \text{Cat}(x| \boldsymbol{\theta}) \triangleq \prod_{k=1}^{K}\theta_k^{\mathbb{I}(x=k)}
@@ -165,6 +163,72 @@ begin
 	ylabel!("$(md"``k``")")
 	xlabel!("trial num")
 	
+end
+
+# ╔═╡ 35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
+md"""
+##### (2.2.1.3) Poisson distribution
+Let ``X \in \{0, 1, 2, \ldots\}``. then the **Poisson distribution** with parameter ``\lambda > 0`` is defined by: 
+```math
+\text{Poi}(x| \lambda ) \triangleq e^{-\lambda}\frac{\lambda^x}{x!}
+```
+
+where ``\lambda`` is the mean (and variance) of ``x``.
+"""
+
+# ╔═╡ acb435e6-8718-4dfd-8d56-965102ce898c
+Xmax = 200;
+
+# ╔═╡ bdee5a80-25ae-4789-bf19-6edad5ac8177
+PlutoUI.combine() do Child
+	@htl("""
+
+		$(Child(md"_Pick a value for_ ``\lambda``"))
+		$(Child(@bind lambda Slider(0:1:10, show_value=true)))
+	""")
+end
+
+# ╔═╡ fc52477e-a124-4f5a-910a-4d6601b83ecf
+begin
+	function poi_plot(lambda)
+		xweights = zeros(Xmax+1)
+		# num_iterations = 1000
+		for i in 0:Xmax
+			xweights[i + 1] = exp(-lambda) * lambda^i / factorial(big(i))
+		end
+		# results = zeros(num_iterations)
+		
+	
+		totalsum = sum(xweights)
+	
+		divisions = zeros(Xmax + 1)
+	
+		runningtotal = 0
+		for i in 1:(Xmax + 1)
+			divisions[i] = runningtotal
+			runningtotal += xweights[i] / totalsum
+		end
+
+		# divisions = min.(1.0, divisions) # adjust for numerical imprecision
+		println(divisions)
+		results = zeros(Xmax+1)
+		
+		for _i in 1:num_iterations	
+			input = rand()
+			println(input)
+			for i in 1:(Xmax+1)
+				if (input >= divisions[i] && (i == Xmax+1 || input < divisions[i + 1]))
+					results[i] += 1
+					println(i)
+					break
+				end
+			end
+		end
+		# divisions
+		histogram(results)
+	end
+
+	poi_plot(lambda)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1274,15 +1338,19 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═25850900-1af5-11ef-32e8-65af8382c8a3
-# ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
+# ╟─25850900-1af5-11ef-32e8-65af8382c8a3
+# ╟─f3419d1a-7346-40ad-b3e0-10dde3e18646
 # ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╟─15dae776-aecb-4c40-bf90-41e76567d664
+# ╠═15dae776-aecb-4c40-bf90-41e76567d664
 # ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
-# ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-# ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
-# ╟─f703e482-7599-4fb5-a7fa-ae61b3053494
+# ╠═1cd4acf3-13f3-4355-8efb-cca6b0ee413e
+# ╠═4a8e0817-6912-41bc-9b37-4e31deab85d9
+# ╠═f703e482-7599-4fb5-a7fa-ae61b3053494
 # ╟─d8c9f643-cfc5-4371-938c-0b0f4836daab
+# ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
+# ╠═acb435e6-8718-4dfd-8d56-965102ce898c
+# ╠═bdee5a80-25ae-4789-bf19-6edad5ac8177
+# ╠═fc52477e-a124-4f5a-910a-4d6601b83ecf
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
