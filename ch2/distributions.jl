@@ -118,6 +118,90 @@ begin
 	title!("Multinomial distribution with $(num_iterations) iterations")
 end
 
+# ╔═╡ 299b3b70-8c4f-4a72-af85-d4422ffa90aa
+md"""
+The exponential family of distributions over ``\mathbf{x}``, given parameters ``\mathbf{\eta}``, is defined to be the set of distributions of the form
+
+```math
+p(\mathbf{x} | \mathbf{\eta}) = h(\mathbf{x}) g(\mathbf{\eta}) \text{ exp } \big\{ \langle \mathbf{\eta}, u(\mathbf{x}) \rangle \big\}
+```
+
+Where ``\mathbf{x}`` may be scalar or vector and may be discrete or continuous. Here ``\mathbf{\eta}`` are called the ``\textit{natural parameters}`` of the distribution. The function ``g(\mathbf{\eta})`` can be interpreted as the coefficient that ensures the distribution is normalized, therefore satisfying
+
+```math
+g(\mathbf{\eta}) \int h(\mathbf{x}) \text{ exp } \big\{ \langle \mathbf{\eta}, u(\mathbf{x}) \rangle \big\} dx = 1
+```
+
+We can now show that the multinomial distribution is a member of the exponential family. Given that categorical, binomial, and bernoulli distributions are all special cases of the multinomial distribution, this case will easily generalize to all distributions explored thus far.
+
+```math
+\begin{align}
+\text{Mul}(\boldsymbol{x}|N, \boldsymbol{\theta})
+&\triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k} \\
+&= {N \choose x_1 \ldots x_K} \prod_{k=1}^K \theta_k^{x_k} \\
+& = \frac{\big( \sum_{k = 1}^K x_k \big)!}{\prod_{k=1}^K x_k!} \text{ exp } \bigg\{ \sum_{k=1}^K x_k \text{ ln } \theta_k \bigg\} \\
+\end{align}
+```
+
+Setting ``\mathbf{x} = [x_1, \ldots, x_K]^T`` and ``\mathbf{\eta} = [ \text{ln } \theta_1, \ldots, \text{ln } \theta_K]^T``, we can then express the multinomial distribution as a member of the exponential family with the following set of functions:
+```math
+\begin{align}
+u(\mathbf{x}) &= \mathbf{x} \\
+h(\mathbf{x}) &= \frac{\big( \sum_{k = 1}^K x_k \big)!}{\prod_{k=1}^K x_k!} \\
+g(\mathbf{\eta}) &= 1
+\end{align}
+```
+
+The binomial distribution is then just the special case where ``|\mathbf{x}| = 2``, and the bernoulli distribution can be expressed as a sub-case of the binomial where ``x_1 + x_2 = 1``.
+"""
+
+# ╔═╡ 21e91fb4-897e-4c0b-8ce2-71f0c1862bab
+function exponential_distribution(x, η, h, g, u) 
+	h(x) * g(η) * exp(sum(η.*(u(x))))
+end
+
+# ╔═╡ 27371758-fa6f-45f2-a835-076c4dbc7045
+PlutoUI.combine() do Child
+	@htl("""
+		$(Child(md"_Pick a value for_ ``\theta_1``"))
+		$(Child(@bind θ1 Slider(0:0.01:1, show_value=true)))
+		$(Child(md"_Pick a value for_ ``x_1``"))
+		$(Child(@bind x1 Slider(0:1:50, show_value=true)))
+		$(Child(md"_Pick a value for_ ``x_2``"))
+		$(Child(@bind x2 Slider(0:1:50, show_value=true)))
+	""")
+end
+
+# ╔═╡ d000c772-2add-4038-8834-e464f04e5131
+begin
+	x = [x1, x2]
+	θ = [θ1, 1 - θ1]
+	η = log.(θ)
+	
+	u = x -> x
+	# h = x -> factorial(sum(x)) / prod(factorial.(x))
+	# consider the categorical dist to avoid factorials
+	h = x -> 1
+	g = η -> 1
+
+	# might be nice to print the probability of observing such an outcome given θ
+	p = exponential_distribution(x, η, h, g, u)
+
+	# graph left unmodified from binomial example.
+	results = zeros(num_iterations)
+	success_count = 0
+	for i in 1:num_iterations	
+		input = rand(sum(x))
+		results[i] = count(a -> a < θ1, input)
+	end
+
+	histogram(results, label="Number of trials that had $(md"``x``") 'success' results"; bin=range(0; stop=sum(x)))
+	title!("Binomial distribution, $(num_iterations) iterations")
+	ylims!(0, num_iterations)
+	xlims!(0, sum(x))
+	xlabel!("$(md"``x``")")
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1230,7 +1314,11 @@ version = "1.4.1+1"
 # ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
 # ╠═15dae776-aecb-4c40-bf90-41e76567d664
-# ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
+# ╠═8ad17213-ff54-4f58-be56-93635c03b4ab
 # ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
+# ╟─299b3b70-8c4f-4a72-af85-d4422ffa90aa
+# ╠═21e91fb4-897e-4c0b-8ce2-71f0c1862bab
+# ╠═27371758-fa6f-45f2-a835-076c4dbc7045
+# ╠═d000c772-2add-4038-8834-e464f04e5131
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
