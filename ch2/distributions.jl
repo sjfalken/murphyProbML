@@ -17,11 +17,14 @@ end
 # ╔═╡ 25850900-1af5-11ef-32e8-65af8382c8a3
 using PlutoUI, HypertextLiteral, Plots
 
+# ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
+num_iterations = 200; 
+
 # ╔═╡ fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 md"""
 ##### (2.2.1.1) Bernoulli and binomial distributions
 
-Let ``x \in \{0, 1, \ldots, N\}``. then
+Let ``x \in \{0, 1, \ldots, N\}``. then the **binomial distribution** is
 ```math
 \text{Bin}(x|N, \mu) \triangleq {N \choose x} \mu^x(1 - \mu)^{N - x}
 
@@ -48,20 +51,71 @@ PlutoUI.combine() do Child
 	""")
 end
 
-# ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
-num_trials = 1000; 
-
 # ╔═╡ 15dae776-aecb-4c40-bf90-41e76567d664
 begin
-	results = zeros(num_trials)
-	success_count = 0
-	for i in 1:num_trials	
-		input = rand(N)
-		results[i] = count(x -> x < mu, input)
+	function binom_plot(mu, N)
+		results = zeros(num_iterations)
+		success_count = 0
+		for i in 1:num_iterations	
+			input = rand(N)
+			results[i] = count(x -> x < mu, input)
+		end
+	
+		histogram(results, label="Number of trials that had $(md"``x``") 'success' results"; bin=range(0; stop=N))
+		title!("Binomial distribution, $(num_iterations) iterations")
+		ylims!(0, num_iterations)
+		xlims!(0, N)
+		xlabel!("$(md"``x``")")
 	end
 
-	histogram(results, label="Experiment Results"; bin=range(0; stop=N+1, length=50))
-	title!("Binomial distribution, $(num_trials) trials")
+	binom_plot(mu, N)
+end
+
+# ╔═╡ 8ad17213-ff54-4f58-be56-93635c03b4ab
+md"""
+##### (2.2.1.2) Categorical and multinomial distributions
+As 
+
+Let ``x \in \{1, 2, \ldots, K\}``. then the **categorical distribution** is defined by: 
+```math
+\text{Cat}(x| \boldsymbol{\theta}) \triangleq \prod_{k=1}^{K}\theta_k^{\mathbb{I}(x=k)}
+
+```
+where ``\mathbb{I}(x=k)`` is the _indicator_ function (equivalent to ``1`` if ``x=k`` and ``0`` otherwise).
+This distribution is a generalization of the Bernoulli distribution (when there are more than two outcomes). Consequently, the **multinomial distribution** is a generalization of the Binomial distribution. It defines the case where a discrete value is sampled over ``N`` trials.
+
+```math
+\text{Mul}(\boldsymbol{x}|N, \boldsymbol{\theta}) \triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k}
+```
+
+where the ``k``'th element of ``\boldsymbol{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
+"""
+
+# ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
+begin
+	function multinom_plot(divisions, N)
+		K = size(divisions, 1)
+		results = zeros(K, N)
+		
+		for i in 1:num_iterations	
+			input = rand(N)
+			
+			for i in 1:K
+				for j in 1:N
+					if (input[j] >= divisions[i] && (i == K || input[j] < divisions[i + 1]))
+						results[i, j] += 1
+					end
+				end
+			end
+		end
+		heatmap(results)
+
+	end
+
+	# args are: cutoffs for each discrete value when mapped from [0, 1], number of trials
+	multinom_plot([0, 0.1, .7], 100)
+
+	title!("Multinomial distribution with $(num_iterations) iterations")
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1172,9 +1226,11 @@ version = "1.4.1+1"
 
 # ╔═╡ Cell order:
 # ╟─25850900-1af5-11ef-32e8-65af8382c8a3
+# ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
 # ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
-# ╟─15dae776-aecb-4c40-bf90-41e76567d664
+# ╠═15dae776-aecb-4c40-bf90-41e76567d664
+# ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
+# ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
