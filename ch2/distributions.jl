@@ -15,7 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 25850900-1af5-11ef-32e8-65af8382c8a3
-using PlutoUI, HypertextLiteral, Plots
+using PlutoUI, HypertextLiteral, Plots, LaTeXStrings
 
 # ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
 num_iterations = 200;
@@ -179,14 +179,23 @@ Where ``\mathbf{x}`` may be scalar or vector and may be discrete or continuous. 
 g(\mathbf{\eta}) \int h(\mathbf{x}) \text{ exp } \big\{ \langle \mathbf{\eta}, u(\mathbf{x}) \rangle \big\} dx = 1
 ```
 
+We can express the members of the exponential family easily in code.
+"""
+
+# ╔═╡ 31f3a2b5-2933-4485-9a9d-8b6b3b30345a
+function exponential_family_dist(x, η, h, g, u)
+	h(x) * g(η) * exp(sum(η.*(u(x))))
+end
+
+# ╔═╡ e1a8499f-9f3c-4b7e-9382-52444b9ad41c
+md"""
 We can now show that the multinomial distribution is a member of the exponential family. Given that categorical, binomial, and bernoulli distributions are all special cases of the multinomial distribution, this case will easily generalize to all distributions explored thus far.
 
 ```math
 \begin{align}
 \text{Mul}(\boldsymbol{x}|N, \boldsymbol{\theta})
 &\triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k} \\
-&= {N \choose x_1 \ldots x_K} \prod_{k=1}^K \theta_k^{x_k} \\
-& = \frac{\big( \sum_{k = 1}^K x_k \big)!}{\prod_{k=1}^K x_k!} \text{ exp } \bigg\{ \sum_{k=1}^K x_k \text{ ln } \theta_k \bigg\} \\
+&= \frac{\big( \sum_{k = 1}^K x_k \big)!}{\prod_{k=1}^K x_k!} \text{ exp } \bigg\{ \sum_{k=1}^K x_k \text{ ln } \theta_k \bigg\} \\
 \end{align}
 ```
 
@@ -200,49 +209,39 @@ g(\mathbf{\eta}) &= 1
 ```
 
 The binomial distribution is then just the special case where ``|\mathbf{x}| = 2``, and the bernoulli distribution can be expressed as a sub-case of the binomial where ``x_1 + x_2 = 1``.
+
+In the cells below, you can play around with an interactive binomial distribution PDF created using the exponential family function we defined earlier.
 """
 
 # ╔═╡ 27371758-fa6f-45f2-a835-076c4dbc7045
 PlutoUI.combine() do Child
 	@htl("""
-		$(Child(md"_Pick a value for_ ``\theta_1``"))
-		$(Child(@bind θ1 Slider(0:0.01:1, show_value=true)))
-		$(Child(md"_Pick a value for_ ``x_1``"))
-		$(Child(@bind x1 Slider(0:1:50, show_value=true)))
-		$(Child(md"_Pick a value for_ ``x_2``"))
-		$(Child(@bind x2 Slider(0:1:50, show_value=true)))
+		$(Child(md"_Pick a value for_ ``N``"))
+		$(Child(@bind N Slider(1:1:500, show_value=true)))
+		$(Child(md"_Pick a value for_ ``\theta``"))
+		$(Child(@bind θ Slider(0:0.01:1, show_value=true)))
 	""")
 end
 
 # ╔═╡ d000c772-2add-4038-8834-e464f04e5131
 begin
-
-
-
-	function exp_plot()
-		x = [x1, x2]
-		θ = [θ1, 1 - θ1]
-		η = log.(θ)
-
-		u = x -> x
-
-		h = x -> 1
-		g = η -> 1
-
-		function exponential_distribution(x, η, h, g, u)
-			h(x) * g(η) * exp(sum(η.*(u(x))))
+	function multinomial_pdf_plot()
+		p = []
+		for i in 1:N
+			x = [i, N-i]
+			μ = [θ, 1 - θ]
+			η = log.(μ)
+	
+			u = x -> x
+			h = x -> binomial(BigInt(N), BigInt(i))
+			g = η -> 1
+	
+			append!(p, exponential_family_dist(x, η, h, g, u))
 		end
-
-
-
-		# z = rand(num_iterations)
-		# z = trunc.(x)
-
-		# histogram(x, weights=exponential_distribution(x, η, h, g, u))
+		plot(p, xlabel="Number of successes", ylabel="hello", fillalpha=0.3, fillrange = 0, label=L"P(x | N, \theta)", c=1)
 	end
 
-	exp_plot()
-
+	multinomial_pdf_plot()
 end
 
 # ╔═╡ 35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
@@ -286,11 +285,13 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 HypertextLiteral = "~0.9.5"
+LaTeXStrings = "~1.3.1"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
 """
@@ -301,7 +302,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "cb54df245d17250402c1d3aaa98dec8f26516d90"
+project_hash = "5383fec33b43f404f13540b1a83405e248758d0f"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -865,9 +866,9 @@ version = "1.10.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
-git-tree-sha1 = "1f03a2d339f42dca4a4da149c7e15e9b896ad899"
+git-tree-sha1 = "6e55c6841ce3411ccb3457ee52fc48cb698d6fb0"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
-version = "3.1.0"
+version = "3.2.0"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "Statistics"]
@@ -1389,21 +1390,23 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─25850900-1af5-11ef-32e8-65af8382c8a3
-# ╟─f3419d1a-7346-40ad-b3e0-10dde3e18646
+# ╠═25850900-1af5-11ef-32e8-65af8382c8a3
+# ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
 # ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
 # ╠═15dae776-aecb-4c40-bf90-41e76567d664
-# ╠═8ad17213-ff54-4f58-be56-93635c03b4ab
+# ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
 # ╠═1cd4acf3-13f3-4355-8efb-cca6b0ee413e
 # ╠═4a8e0817-6912-41bc-9b37-4e31deab85d9
 # ╠═6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
 # ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
 # ╟─299b3b70-8c4f-4a72-af85-d4422ffa90aa
+# ╠═31f3a2b5-2933-4485-9a9d-8b6b3b30345a
+# ╟─e1a8499f-9f3c-4b7e-9382-52444b9ad41c
 # ╟─27371758-fa6f-45f2-a835-076c4dbc7045
-# ╠═d000c772-2add-4038-8834-e464f04e5131
-# ╠═35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
-# ╠═bdee5a80-25ae-4789-bf19-6edad5ac8177
+# ╟─d000c772-2add-4038-8834-e464f04e5131
+# ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
+# ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
 # ╠═d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
 # ╠═fc52477e-a124-4f5a-910a-4d6601b83ecf
 # ╟─00000000-0000-0000-0000-000000000001
