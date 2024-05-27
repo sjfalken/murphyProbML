@@ -15,7 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 25850900-1af5-11ef-32e8-65af8382c8a3
-using PlutoUI, HypertextLiteral, Plots, LaTeXStrings
+using PlutoUI, HypertextLiteral, Plots, LaTeXStrings, StatsBase
 
 # ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
 num_iterations = 200;
@@ -95,7 +95,7 @@ PlutoUI.combine() do Child
 		$(Child(md"_Pick a value for_ ``K``"))
 		$(Child(@bind K Slider(1:1:10, show_value=true)))
 		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N_multinom Slider(1:1:100, show_value=true)))
+		$(Child(@bind N_multinom Slider(1:1:1000, show_value=true)))
 	""")
 end
 
@@ -125,39 +125,38 @@ begin
 
 	totalsum = sum(thetas)
 
-	divisions = zeros(K)
+	weights = zeros(K)
 
-	runningtotal = 0
 	for i in 1:K
-		divisions[i] = runningtotal
-		runningtotal += thetas[i] / totalsum
+		weights[i] = thetas[i] / totalsum
 	end
 
 end
 
 # ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
 begin
-	function multinom_plot(divisions, N)
-		K = size(divisions, 1)
-		results = zeros(K, N)
+	function multinom_plot(N)
+		# K = size(divisions, 1)
+		# results = zeros(K, N)
 
-		for i in 1:num_iterations
-			input = rand(N)
+		# for i in 1:num_iterations
+		# 	input = rand(N)
 
-			for i in 1:K
-				for j in 1:N
-					if (input[j] >= divisions[i] && (i == K || input[j] < divisions[i + 1]))
-						results[i, j] += 1
-					end
-				end
-			end
-		end
-		heatmap(results, colorbar_title="count over iterations")
+		# 	for i in 1:K
+		# 		for j in 1:N
+		# 			if (input[j] >= divisions[i] && (i == K || input[j] < divisions[i + 1]))
+		# 				results[i, j] += 1
+		# 			end
+		# 		end
+		# 	end
+		# end
+		# heatmap(results, colorbar_title="count over iterations")
 
+		histogram([wsample(1:K, weights) for _ in 1:N], bins=1:K)
 	end
 
 	# args are: cutoffs for each discrete value when mapped from [0, 1], number of trials
-	multinom_plot(divisions, N_multinom)
+	multinom_plot(N_multinom)
 
 	title!("Multinomial distribution with $(num_iterations) iterations")
 	ylabel!("$(md"``k``")")
@@ -371,12 +370,14 @@ HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 HypertextLiteral = "~0.9.5"
 LaTeXStrings = "~1.3.1"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
+StatsBase = "~0.34.3"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -385,7 +386,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "5383fec33b43f404f13540b1a83405e248758d0f"
+project_hash = "c6e3ccdbe2e300417baa48f55489c2cb22366513"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -949,9 +950,9 @@ version = "1.10.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
-git-tree-sha1 = "6e55c6841ce3411ccb3457ee52fc48cb698d6fb0"
+git-tree-sha1 = "1f03a2d339f42dca4a4da149c7e15e9b896ad899"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
-version = "3.2.0"
+version = "3.1.0"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "Statistics"]
