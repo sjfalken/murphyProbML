@@ -18,7 +18,7 @@ end
 using PlutoUI, HypertextLiteral, Plots
 
 # ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
-num_iterations = 200; 
+num_iterations = 200;
 
 # ╔═╡ fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 md"""
@@ -33,9 +33,9 @@ Let ``x \in \{0, 1, \ldots, N\}``. then the **binomial distribution** is
 if ``N = 1``, then ``x \in \{0, 1\}`` and this reduces to the **Bernoulli distribution**:
 ```math
 \text{Ber}(x|\mu) =
-\begin{cases} 
+\begin{cases}
 	 1 - \mu & \text{if } x=0\\ \mu & \text{if } x = 1
-\end{cases} 
+\end{cases}
 ```
 """
 
@@ -56,11 +56,11 @@ begin
 	function binom_plot(mu, N)
 		results = zeros(num_iterations)
 		success_count = 0
-		for i in 1:num_iterations	
+		for i in 1:num_iterations
 			input = rand(N)
 			results[i] = count(x -> x < mu, input)
 		end
-	
+
 		histogram(results, label="Number of trials that had $(md"``x``") 'success' results"; bin=range(0; stop=N))
 		title!("Binomial distribution, $(num_iterations) iterations")
 		ylims!(0, num_iterations)
@@ -74,7 +74,7 @@ end
 # ╔═╡ 8ad17213-ff54-4f58-be56-93635c03b4ab
 md"""
 ##### (2.2.1.2) Categorical and multinomial distributions
-Let ``x \in \{1, 2, \ldots, K\}``. then the **categorical distribution** is defined by: 
+Let ``x \in \{1, 2, \ldots, K\}``. then the **categorical distribution** is defined by:
 ```math
 \text{Cat}(x| \boldsymbol{\theta}) \triangleq \prod_{k=1}^{K}\theta_k^{\mathbb{I}(x=k)}
 
@@ -88,6 +88,82 @@ This distribution is a generalization of the Bernoulli distribution (when there 
 
 where the ``k``'th element of ``\boldsymbol{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
 """
+
+# ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
+PlutoUI.combine() do Child
+	@htl("""
+		$(Child(md"_Pick a value for_ ``K``"))
+		$(Child(@bind K Slider(1:1:10, show_value=true)))
+		$(Child(md"_Pick a value for_ ``N``"))
+		$(Child(@bind N_multinom Slider(1:1:100, show_value=true)))
+	""")
+end
+
+# ╔═╡ 4a8e0817-6912-41bc-9b37-4e31deab85d9
+@bind inputvals PlutoUI.combine() do Child
+	@htl("""
+		$(Child("prompt", md"_Pick weights for each_ ``\theta_k``"))
+
+		<div>
+			$([ @htl("""
+				<div style="display:flex;flex-direction:row">
+					$(Child("theta$(i)", Slider(0.01:0.01:1,default=1, show_value=true)))
+				</div>
+			""")
+			for i in 1:K])
+		</div>
+	""")
+
+end
+
+# ╔═╡ 6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
+begin
+	thetas = zeros(K)
+	for i in 1:K
+		thetas[i] = inputvals[Symbol("theta$i")]
+	end
+
+	totalsum = sum(thetas)
+
+	divisions = zeros(K)
+
+	runningtotal = 0
+	for i in 1:K
+		divisions[i] = runningtotal
+		runningtotal += thetas[i] / totalsum
+	end
+
+end
+
+# ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
+begin
+	function multinom_plot(divisions, N)
+		K = size(divisions, 1)
+		results = zeros(K, N)
+
+		for i in 1:num_iterations
+			input = rand(N)
+
+			for i in 1:K
+				for j in 1:N
+					if (input[j] >= divisions[i] && (i == K || input[j] < divisions[i + 1]))
+						results[i, j] += 1
+					end
+				end
+			end
+		end
+		heatmap(results, colorbar_title="count over iterations")
+
+	end
+
+	# args are: cutoffs for each discrete value when mapped from [0, 1], number of trials
+	multinom_plot(divisions, N_multinom)
+
+	title!("Multinomial distribution with $(num_iterations) iterations")
+	ylabel!("$(md"``k``")")
+	xlabel!("trial num")
+
+end
 
 # ╔═╡ 299b3b70-8c4f-4a72-af85-d4422ffa90aa
 md"""
@@ -126,11 +202,6 @@ g(\mathbf{\eta}) &= 1
 The binomial distribution is then just the special case where ``|\mathbf{x}| = 2``, and the bernoulli distribution can be expressed as a sub-case of the binomial where ``x_1 + x_2 = 1``.
 """
 
-# ╔═╡ 21e91fb4-897e-4c0b-8ce2-71f0c1862bab
-function exponential_distribution(x, η, h, g, u) 
-	h(x) * g(η) * exp(sum(η.*(u(x))))
-end
-
 # ╔═╡ 27371758-fa6f-45f2-a835-076c4dbc7045
 PlutoUI.combine() do Child
 	@htl("""
@@ -145,123 +216,45 @@ end
 
 # ╔═╡ d000c772-2add-4038-8834-e464f04e5131
 begin
-	x = [x1, x2]
-	θ = [θ1, 1 - θ1]
-	η = log.(θ)
-	
-	u = x -> x
-	# h = x -> factorial(sum(x)) / prod(factorial.(x))
-	# consider the categorical dist to avoid factorials
-	h = x -> 1
-	g = η -> 1
 
-	# might be nice to print the probability of observing such an outcome given θ
-	p = exponential_distribution(x, η, h, g, u)
 
-	# graph left unmodified from binomial example.
-	results = zeros(num_iterations)
-	success_count = 0
-	for i in 1:num_iterations	
-		input = rand(sum(x))
-		results[i] = count(a -> a < θ1, input)
+
+	function exp_plot()
+		x = [x1, x2]
+		θ = [θ1, 1 - θ1]
+		η = log.(θ)
+
+		u = x -> x
+
+		h = x -> 1
+		g = η -> 1
+
+		function exponential_distribution(x, η, h, g, u)
+			h(x) * g(η) * exp(sum(η.*(u(x))))
+		end
+
+
+
+		# z = rand(num_iterations)
+		# z = trunc.(x)
+
+		# histogram(x, weights=exponential_distribution(x, η, h, g, u))
 	end
 
-	histogram(results, label="Number of trials that had $(md"``x``") 'success' results"; bin=range(0; stop=sum(x)))
-	title!("Binomial distribution, $(num_iterations) iterations")
-	ylims!(0, num_iterations)
-	xlims!(0, sum(x))
-	xlabel!("$(md"``x``")")
+	exp_plot()
+
 end
 
 # ╔═╡ 35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
 md"""
 ##### (2.2.1.3) Poisson distribution
-Let ``X \in \{0, 1, 2, \ldots\}``. then the **Poisson distribution** with parameter ``\lambda > 0`` is defined by: 
+Let ``X \in \{0, 1, 2, \ldots\}``. then the **Poisson distribution** with parameter ``\lambda > 0`` is defined by:
 ```math
 \text{Poi}(x| \lambda ) \triangleq e^{-\lambda}\frac{\lambda^x}{x!}
 ```
 
 where ``\lambda`` is the mean (and variance) of ``x``.
 """
-
-# ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-PlutoUI.combine() do Child
-	@htl("""
-		$(Child(md"_Pick a value for_ ``K``"))
-		$(Child(@bind K Slider(1:1:10, show_value=true)))
-		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N_multinom Slider(1:1:100, show_value=true)))
-	""")
-end
-
-# ╔═╡ 4a8e0817-6912-41bc-9b37-4e31deab85d9
-@bind inputvals PlutoUI.combine() do Child
-	@htl("""
-		$(Child("prompt", md"_Pick weights for each_ ``\theta_k``"))
-
-		<div>
-			$([ @htl("""
-				<div style="display:flex;flex-direction:row">
-					$(Child("theta$(i)", Slider(0.01:0.01:1,default=1, show_value=true)))
-				</div>
-			""")
-			for i in 1:K])
-		</div>
-	""")
-	
-end
-
-# ╔═╡ f703e482-7599-4fb5-a7fa-ae61b3053494
-begin
-	thetas = zeros(K)	
-	for i in 1:K
-		thetas[i] = inputvals[Symbol("theta$i")]
-	end
-
-	totalsum = sum(thetas)
-
-	divisions = zeros(K)
-
-	runningtotal = 0
-	for i in 1:K
-		divisions[i] = runningtotal
-		runningtotal += thetas[i] / totalsum
-	end
-
-end
-
-# ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
-begin
-	function multinom_plot(divisions, N)
-		K = size(divisions, 1)
-		results = zeros(K, N)
-		
-		for i in 1:num_iterations	
-			input = rand(N)
-			
-			for i in 1:K
-				for j in 1:N
-					if (input[j] >= divisions[i] && (i == K || input[j] < divisions[i + 1]))
-						results[i, j] += 1
-					end
-				end
-			end
-		end
-		heatmap(results, colorbar_title="count over iterations")
-
-	end
-
-	# args are: cutoffs for each discrete value when mapped from [0, 1], number of trials
-	multinom_plot(divisions, N_multinom)
-
-	title!("Multinomial distribution with $(num_iterations) iterations")
-	ylabel!("$(md"``k``")")
-	xlabel!("trial num")
-	
-end
-
-# ╔═╡ acb435e6-8718-4dfd-8d56-965102ce898c
-Xmax = 200;
 
 # ╔═╡ bdee5a80-25ae-4789-bf19-6edad5ac8177
 PlutoUI.combine() do Child
@@ -272,44 +265,18 @@ PlutoUI.combine() do Child
 	""")
 end
 
+# ╔═╡ d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
+Xmax = 20;
+
 # ╔═╡ fc52477e-a124-4f5a-910a-4d6601b83ecf
 begin
 	function poi_plot(lambda)
-		xweights = zeros(Xmax+1)
-		# num_iterations = 1000
-		for i in 0:Xmax
-			xweights[i + 1] = exp(-lambda) * lambda^i / factorial(big(i))
-		end
-		# results = zeros(num_iterations)
-		
-	
-		totalsum = sum(xweights)
-	
-		divisions = zeros(Xmax + 1)
-	
-		runningtotal = 0
-		for i in 1:(Xmax + 1)
-			divisions[i] = runningtotal
-			runningtotal += xweights[i] / totalsum
-		end
+		poisson(i) = exp(-lambda) * lambda^i / factorial(big(i))
 
-		# divisions = min.(1.0, divisions) # adjust for numerical imprecision
-		println(divisions)
-		results = zeros(Xmax+1)
-		
-		for _i in 1:num_iterations	
-			input = rand()
-			println(input)
-			for i in 1:(Xmax+1)
-				if (input >= divisions[i] && (i == Xmax+1 || input < divisions[i + 1]))
-					results[i] += 1
-					println(i)
-					break
-				end
-			end
-		end
-		# divisions
-		histogram(results)
+		x = rand(num_iterations)*20
+		x = trunc.(x)
+
+		histogram(x, weights=poisson.(x), bins=0:20)
 	end
 
 	poi_plot(lambda)
@@ -1430,15 +1397,14 @@ version = "1.4.1+1"
 # ╠═8ad17213-ff54-4f58-be56-93635c03b4ab
 # ╠═1cd4acf3-13f3-4355-8efb-cca6b0ee413e
 # ╠═4a8e0817-6912-41bc-9b37-4e31deab85d9
+# ╠═6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
 # ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
 # ╟─299b3b70-8c4f-4a72-af85-d4422ffa90aa
-# ╠═27371758-fa6f-45f2-a835-076c4dbc7045
-# ╠═21e91fb4-897e-4c0b-8ce2-71f0c1862bab
-# ╟─d000c772-2add-4038-8834-e464f04e5131
-# ╠═f703e482-7599-4fb5-a7fa-ae61b3053494
-# ╠═acb435e6-8718-4dfd-8d56-965102ce898c
-# ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
-# ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
-# ╟─fc52477e-a124-4f5a-910a-4d6601b83ecf
+# ╟─27371758-fa6f-45f2-a835-076c4dbc7045
+# ╠═d000c772-2add-4038-8834-e464f04e5131
+# ╠═35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
+# ╠═bdee5a80-25ae-4789-bf19-6edad5ac8177
+# ╠═d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
+# ╠═fc52477e-a124-4f5a-910a-4d6601b83ecf
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
