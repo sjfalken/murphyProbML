@@ -200,6 +200,7 @@ We can now show that the multinomial distribution is a member of the exponential
 ```
 
 Setting ``\mathbf{x} = [x_1, \ldots, x_K]^T`` and ``\mathbf{\eta} = [ \text{ln } \theta_1, \ldots, \text{ln } \theta_K]^T``, we can then express the multinomial distribution as a member of the exponential family with the following set of functions:
+
 ```math
 \begin{align}
 u(\mathbf{x}) &= \mathbf{x} \\
@@ -217,31 +218,113 @@ In the cells below, you can play around with an interactive binomial distributio
 PlutoUI.combine() do Child
 	@htl("""
 		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N Slider(1:1:500, show_value=true)))
-		$(Child(md"_Pick a value for_ ``\theta``"))
-		$(Child(@bind θ Slider(0:0.01:1, show_value=true)))
+		$(Child(@bind N1 Slider(1:1:500, show_value=true)))
+		$(Child(md"_Pick a value for_ ``\mu``"))
+		$(Child(@bind μ1 Slider(0:0.01:1, show_value=true)))
 	""")
 end
 
 # ╔═╡ d000c772-2add-4038-8834-e464f04e5131
-begin
-	function multinomial_pdf_plot()
-		p = []
-		for i in 1:N
-			x = [i, N-i]
-			μ = [θ, 1 - θ]
-			η = log.(μ)
-	
-			u = x -> x
-			h = x -> binomial(BigInt(N), BigInt(i))
-			g = η -> 1
-	
-			append!(p, exponential_family_dist(x, η, h, g, u))
-		end
-		plot(p, xlabel="Number of successes", ylabel="hello", fillalpha=0.3, fillrange = 0, label=L"P(x | N, \theta)", c=1)
-	end
+function multinomial_pdf_plot(n, θ)
+	p = []
+	for i in 1:n
+		# express as a binomial due to limited dimensions...
+		x = [i, n-i]
+		Θ = [θ, 1 - θ]
+		η = log.(Θ)
 
-	multinomial_pdf_plot()
+		u = x -> x
+		h = x -> binomial(BigInt(n), BigInt(i))
+		g = η -> 1
+
+		append!(p, exponential_family_dist(x, η, h, g, u))
+	end
+	return plot(p, xlabel="Number of successes", ylabel="hello", fillalpha=0.3, fillrange = 0, label=L"P(x | N, \theta)", c=1)
+end
+
+# ╔═╡ e3a18c66-b3e2-4cea-b06d-d857f59220ed
+multinomial_pdf_plot(N1, μ1)
+
+# ╔═╡ 4d7c0301-6366-4005-a445-01c4dcba4a89
+md"""
+Taking the limit of the binomial distribution as it tends towards infinity, holding ``x\mu = n`` constant, shows the Poisson distribution to be a special limiting case of the binomial distribution (and therefore, of the multinomial distribution).
+
+```math
+\begin{align}
+	\lim_{n \rightarrow \infty}\text{Bin}(x|n, \mu) 
+	&= \lim_{n \rightarrow \infty} \frac{n!}{x!(n - x)!} \bigg(\frac{\mu}{n}\bigg)^x \bigg(1 - \frac{\mu}{n}\bigg)^{n - x} \\
+	&= \lim_{n \rightarrow \infty} \frac{n(n-1) \ldots (n - x + 1)}{x!} \bigg(\frac{\mu}{n}\bigg)^x \bigg(1 - \frac{\mu}{n}\bigg)^{n - x} \\
+	&= \frac{\mu^x}{x!} \lim_{n \rightarrow \infty}  \frac{n(n-1) \ldots (n - x + 1)}{n^x} \bigg(1 - \frac{\mu}{n}\bigg)^{n - x} \\
+	&= \frac{\mu^x}{x!} \lim_{n \rightarrow \infty}  \frac{n^{x} + O(n^{x - 1})}{n^x} \bigg(1 - \frac{\mu}{n}\bigg)^{n} \bigg(1 - \frac{\mu}{n}\bigg)^{-x} \\
+	&= \frac{\mu^x}{x!} \cdot 1 \cdot e^{-\mu} \cdot \frac{1}{1} \\
+	&= e^{-\mu} \frac{\mu^x}{x!} \\
+\end{align}
+```
+
+In practice, this derivation allows for the binomial distribution to be approximated by the much easier to compute Poisson distribution when ``x`` is very small relative to ``n``.
+
+As should be clear from the expression of the Poisson distribution and its relationship to the binomial distribution, it is also a member of the exponential family.
+
+```math
+\begin{align}
+	e^{-\mu} \frac{\mu^x}{x!} = \text{exp } \big\{ -\mu \big\} \cdot \frac{1}{x!} \cdot \text{exp } \big\{ x \text{ ln } \mu \big\}\\
+\end{align}
+```
+
+Then, with ``\eta = \text{ln } \mu`` and ``\mathbf{x} = x``, we can define the Poisson distribution as a member of the exponential family with the following functions:
+
+```math
+\begin{align}
+u(\mathbf{x}) &= \mathbf{x} \\
+h(\mathbf{x}) &= \frac{1}{\mathbf{x}!} \\
+g(\mathbf{\eta}) &= \text{exp } \big\{ - \text{ exp } \big\{ \eta \big\}\big\} \\ 
+\end{align}
+```
+
+For reference, the standard form of the exponential is re-printed below.
+
+```math
+p(\mathbf{x} | \mathbf{\eta}) = h(\mathbf{x}) g(\mathbf{\eta}) \text{ exp } \big\{ \langle \mathbf{\eta}, u(\mathbf{x}) \rangle \big\}
+```
+
+We can now use this with our earlier created standard exponential family function to compare the PDF's of the poisson on binomial distribution. As expected from the limit, for relatively large N's, the Poisson distribution approximates the binomial distribution.
+"""
+
+# ╔═╡ de53d74a-88e3-418e-8ccf-7894c051c48d
+# Here, we can use our exponential family function to also build a PDF for the Poisson distribution.
+function poisson_pdf_plot(n, μ) 
+	p = []
+	
+	u = x -> x
+	h = x -> 1 / factorial(BigInt(x))
+	g = η -> exp(-exp(η))
+
+	for i in 1:n
+		# express as a binomial due to limited dimensions...
+		x = i
+		η = log.(μ)
+		
+		append!(p, exponential_family_dist(x, η, h, g, u))
+	end
+	return plot(p, xlabel="Number of successes", ylabel="goodbye", fillalpha=0.3, fillrange = 0, label=L"P(x | \mu)", c=1)
+end
+
+
+# ╔═╡ 66f36ef0-31cf-4dde-af07-d138e6e5006e
+PlutoUI.combine() do Child
+	@htl("""
+		$(Child(md"_Pick a value for_ ``N``"))
+		$(Child(@bind N2 Slider(1:1.0:50, show_value=true))) 
+		$(Child(md"_Pick a value for_ ``\mu``"))
+		$(Child(@bind μ2 Slider(1:1.0:20, show_value=true)))
+	""")
+end
+
+# ╔═╡ 8b48e359-b8f7-4904-9717-b0bea59aad99
+begin
+	# for mu -> 0, the binomial distribution will
+	# tend to the poisson distribution as n -> infinity.
+	plot(multinomial_pdf_plot(N2, μ2/N2), poisson_pdf_plot(N2, μ2))
 end
 
 # ╔═╡ 35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
@@ -1392,7 +1475,7 @@ version = "1.4.1+1"
 # ╔═╡ Cell order:
 # ╠═25850900-1af5-11ef-32e8-65af8382c8a3
 # ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
-# ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
+# ╠═fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
 # ╠═15dae776-aecb-4c40-bf90-41e76567d664
 # ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
@@ -1405,6 +1488,11 @@ version = "1.4.1+1"
 # ╟─e1a8499f-9f3c-4b7e-9382-52444b9ad41c
 # ╟─27371758-fa6f-45f2-a835-076c4dbc7045
 # ╟─d000c772-2add-4038-8834-e464f04e5131
+# ╟─e3a18c66-b3e2-4cea-b06d-d857f59220ed
+# ╟─4d7c0301-6366-4005-a445-01c4dcba4a89
+# ╟─de53d74a-88e3-418e-8ccf-7894c051c48d
+# ╟─66f36ef0-31cf-4dde-af07-d138e6e5006e
+# ╠═8b48e359-b8f7-4904-9717-b0bea59aad99
 # ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
 # ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
 # ╠═d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
