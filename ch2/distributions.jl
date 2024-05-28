@@ -18,7 +18,7 @@ end
 using PlutoUI, HypertextLiteral, Plots, LaTeXStrings, StatsBase
 
 # ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
-num_iterations = 200;
+num_iterations = 200
 
 # ╔═╡ fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 md"""
@@ -83,10 +83,10 @@ where ``\mathbb{I}(x=k)`` is the _indicator_ function (equivalent to ``1`` if ``
 This distribution is a generalization of the Bernoulli distribution (when there are more than two outcomes). Consequently, the **multinomial distribution** is a generalization of the Binomial distribution. It defines the case where a discrete value is sampled over ``N`` trials.
 
 ```math
-\text{Mul}(\boldsymbol{x}|N, \boldsymbol{\theta}) \triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k}
+\text{Mul}(\mathbf{x}|N, \boldsymbol{\theta}) \triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k}
 ```
 
-where the ``k``'th element of ``\boldsymbol{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
+where the ``k``'th element of ``\mathbf{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
 """
 
 # ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
@@ -201,7 +201,7 @@ g(\mathbf{\eta}) &= 1
 \end{align}
 ```
 
-The binomial distribution is then just the special case where ``|\mathbf{x}| = 2``, and the bernoulli distribution can be expressed as a sub-case of the binomial where ``x_1 + x_2 = 1``.
+The binomial distribution is then just the special case where ``\mathbf{x} \in \mathbb{R}^2``, and the bernoulli distribution can be expressed as a sub-case of the binomial where ``x_1 + x_2 = 1``.
 
 In the cells below, you can play around with an interactive binomial distribution PDF created using the exponential family function we defined earlier.
 """
@@ -340,7 +340,7 @@ PlutoUI.combine() do Child
 end
 
 # ╔═╡ d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
-Xmax = 20;
+Xmax = 20
 
 # ╔═╡ fc52477e-a124-4f5a-910a-4d6601b83ecf
 begin
@@ -1467,29 +1467,29 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═25850900-1af5-11ef-32e8-65af8382c8a3
-# ╠═f3419d1a-7346-40ad-b3e0-10dde3e18646
-# ╠═fbf9ef6f-e715-4c41-81cd-4c08b6129dac
+# ╟─25850900-1af5-11ef-32e8-65af8382c8a3
+# ╟─f3419d1a-7346-40ad-b3e0-10dde3e18646
+# ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
 # ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╠═15dae776-aecb-4c40-bf90-41e76567d664
-# ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
-# ╠═1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-# ╠═4a8e0817-6912-41bc-9b37-4e31deab85d9
-# ╠═6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
-# ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
-# ╟─299b3b70-8c4f-4a72-af85-d4422ffa90aa
+# ╟─15dae776-aecb-4c40-bf90-41e76567d664
+# ╠═8ad17213-ff54-4f58-be56-93635c03b4ab
+# ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
+# ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
+# ╟─6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
+# ╟─d8c9f643-cfc5-4371-938c-0b0f4836daab
+# ╠═299b3b70-8c4f-4a72-af85-d4422ffa90aa
 # ╠═31f3a2b5-2933-4485-9a9d-8b6b3b30345a
-# ╟─e1a8499f-9f3c-4b7e-9382-52444b9ad41c
+# ╠═e1a8499f-9f3c-4b7e-9382-52444b9ad41c
 # ╟─27371758-fa6f-45f2-a835-076c4dbc7045
 # ╟─d000c772-2add-4038-8834-e464f04e5131
 # ╟─e3a18c66-b3e2-4cea-b06d-d857f59220ed
 # ╟─4d7c0301-6366-4005-a445-01c4dcba4a89
 # ╟─de53d74a-88e3-418e-8ccf-7894c051c48d
 # ╟─66f36ef0-31cf-4dde-af07-d138e6e5006e
-# ╠═8b48e359-b8f7-4904-9717-b0bea59aad99
+# ╟─8b48e359-b8f7-4904-9717-b0bea59aad99
 # ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
 # ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
-# ╠═d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
-# ╠═fc52477e-a124-4f5a-910a-4d6601b83ecf
+# ╟─d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
+# ╟─fc52477e-a124-4f5a-910a-4d6601b83ecf
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
