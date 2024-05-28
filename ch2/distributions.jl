@@ -86,7 +86,7 @@ This distribution is a generalization of the Bernoulli distribution (when there 
 \text{Mul}(\mathbf{x}|N, \boldsymbol{\theta}) \triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k}
 ```
 
-where the ``k``'th element of ``\mathbf{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
+where the ``k``th element of ``\mathbf{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
 """
 
 # ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
@@ -153,7 +153,7 @@ begin
 	multinom_plot(N_multinom)
 
 	title!("Multinomial distribution with $(num_iterations) iterations")
-	xlabel!("frequency of $(md"``k_i``") over $(md"``N``") samples")
+	xlabel!("count of $(md"``k_i``") over $(md"``N``") samples")
 
 end
 
@@ -1476,7 +1476,7 @@ version = "1.4.1+1"
 # ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
 # ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
 # ╟─6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
-# ╟─d8c9f643-cfc5-4371-938c-0b0f4836daab
+# ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
 # ╠═299b3b70-8c4f-4a72-af85-d4422ffa90aa
 # ╠═31f3a2b5-2933-4485-9a9d-8b6b3b30345a
 # ╠═e1a8499f-9f3c-4b7e-9382-52444b9ad41c
