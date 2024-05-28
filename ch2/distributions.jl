@@ -136,31 +136,24 @@ end
 # ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
 begin
 	function multinom_plot(N)
-		# K = size(divisions, 1)
-		# results = zeros(K, N)
 
-		# for i in 1:num_iterations
-		# 	input = rand(N)
+		results = zeros(K, num_iterations)
+		for i in 1:num_iterations
+			samples = [wsample(1:K, weights) for _ in 1:N]
 
-		# 	for i in 1:K
-		# 		for j in 1:N
-		# 			if (input[j] >= divisions[i] && (i == K || input[j] < divisions[i + 1]))
-		# 				results[i, j] += 1
-		# 			end
-		# 		end
-		# 	end
-		# end
-		# heatmap(results, colorbar_title="count over iterations")
+			counts = [count(x -> x == j, samples) for j in 1:K]
 
-		histogram([wsample(1:K, weights) for _ in 1:N], bins=1:K)
+
+			results[:, i] += counts
+		end
+		plot()
+		[stephist!(results[i, :], label=L"k_{%$(i)}") for i in 1:K]
 	end
 
-	# args are: cutoffs for each discrete value when mapped from [0, 1], number of trials
 	multinom_plot(N_multinom)
 
 	title!("Multinomial distribution with $(num_iterations) iterations")
-	ylabel!("$(md"``k``")")
-	xlabel!("trial num")
+	xlabel!("frequency of $(md"``k_i``") over $(md"``N``") samples")
 
 end
 
