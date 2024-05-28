@@ -17,146 +17,6 @@ end
 # ╔═╡ 25850900-1af5-11ef-32e8-65af8382c8a3
 using PlutoUI, HypertextLiteral, Plots, LaTeXStrings, StatsBase
 
-# ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
-num_iterations = 200
-
-# ╔═╡ fbf9ef6f-e715-4c41-81cd-4c08b6129dac
-md"""
-##### (2.2.1.1) Bernoulli and binomial distributions
-
-Let ``x \in \{0, 1, \ldots, N\}``. then the **binomial distribution** is
-```math
-\text{Bin}(x|N, \mu) \triangleq {N \choose x} \mu^x(1 - \mu)^{N - x}
-
-```
-
-if ``N = 1``, then ``x \in \{0, 1\}`` and this reduces to the **Bernoulli distribution**:
-```math
-\text{Ber}(x|\mu) =
-\begin{cases}
-	 1 - \mu & \text{if } x=0\\ \mu & \text{if } x = 1
-\end{cases}
-```
-"""
-
-
-# ╔═╡ be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-
-PlutoUI.combine() do Child
-	@htl("""
-		$(Child(md"_Pick a value for_ ``\mu``"))
-		$(Child(@bind mu Slider(0:0.01:1, show_value=true)))
-		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N_binom Slider(1:100, show_value=true)))
-	""")
-end
-
-# ╔═╡ 15dae776-aecb-4c40-bf90-41e76567d664
-begin
-	function binom_plot(mu, N)
-		results = zeros(num_iterations)
-		success_count = 0
-		for i in 1:num_iterations
-			input = rand(N)
-			results[i] = count(x -> x < mu, input)
-		end
-
-		histogram(results, label="Number of trials that had $(md"``x``") 'success' results"; bin=range(0; stop=N))
-		title!("Binomial distribution, $(num_iterations) iterations")
-		ylims!(0, num_iterations)
-		xlims!(0, N)
-		xlabel!("$(md"``x``")")
-	end
-
-	binom_plot(mu, N_binom)
-end
-
-# ╔═╡ 8ad17213-ff54-4f58-be56-93635c03b4ab
-md"""
-##### (2.2.1.2) Categorical and multinomial distributions
-Let ``x \in \{1, 2, \ldots, K\}``. then the **categorical distribution** is defined by:
-```math
-\text{Cat}(x| \boldsymbol{\theta}) \triangleq \prod_{k=1}^{K}\theta_k^{\mathbb{I}(x=k)}
-
-```
-where ``\mathbb{I}(x=k)`` is the _indicator_ function (equivalent to ``1`` if ``x=k`` and ``0`` otherwise).
-This distribution is a generalization of the Bernoulli distribution (when there are more than two outcomes). Consequently, the **multinomial distribution** is a generalization of the Binomial distribution. It defines the case where a discrete value is sampled over ``N`` trials.
-
-```math
-\text{Mul}(\mathbf{x}|N, \boldsymbol{\theta}) \triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k}
-```
-
-where the ``k``th element of ``\mathbf{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
-"""
-
-# ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-PlutoUI.combine() do Child
-	@htl("""
-		$(Child(md"_Pick a value for_ ``K``"))
-		$(Child(@bind K Slider(1:1:10, show_value=true)))
-		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N_multinom Slider(1:1:1000, show_value=true)))
-	""")
-end
-
-# ╔═╡ 4a8e0817-6912-41bc-9b37-4e31deab85d9
-@bind inputvals PlutoUI.combine() do Child
-	@htl("""
-		$(Child("prompt", md"_Pick weights for each_ ``\theta_k``"))
-
-		<div>
-			$([ @htl("""
-				<div style="display:flex;flex-direction:row">
-					$(Child("theta$(i)", Slider(0.01:0.01:1,default=1, show_value=true)))
-				</div>
-			""")
-			for i in 1:K])
-		</div>
-	""")
-
-end
-
-# ╔═╡ 6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
-begin
-	thetas = zeros(K)
-	for i in 1:K
-		thetas[i] = inputvals[Symbol("theta$i")]
-	end
-
-	totalsum = sum(thetas)
-
-	weights = zeros(K)
-
-	for i in 1:K
-		weights[i] = thetas[i] / totalsum
-	end
-
-end
-
-# ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
-begin
-	function multinom_plot(N)
-
-		results = zeros(K, num_iterations)
-		for i in 1:num_iterations
-			samples = [wsample(1:K, weights) for _ in 1:N]
-
-			counts = [count(x -> x == j, samples) for j in 1:K]
-
-
-			results[:, i] += counts
-		end
-		plot()
-		[stephist!(results[i, :], label=L"k_{%$(i)}") for i in 1:K]
-	end
-
-	multinom_plot(N_multinom)
-
-	title!("Multinomial distribution with $(num_iterations) iterations")
-	xlabel!("count of $(md"``k_i``") over $(md"``N``") samples")
-
-end
-
 # ╔═╡ 299b3b70-8c4f-4a72-af85-d4422ffa90aa
 md"""
 The exponential family of distributions over ``\mathbf{x}``, given parameters ``\mathbf{\eta}``, is defined to be the set of distributions of the form
@@ -319,42 +179,7 @@ begin
 	plot(multinomial_pdf_plot(N2, μ2/N2), poisson_pdf_plot(N2, μ2))
 end
 
-# ╔═╡ 35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
-md"""
-##### (2.2.1.3) Poisson distribution
-Let ``X \in \{0, 1, 2, \ldots\}``. then the **Poisson distribution** with parameter ``\lambda > 0`` is defined by:
-```math
-\text{Poi}(x| \lambda ) \triangleq e^{-\lambda}\frac{\lambda^x}{x!}
-```
 
-where ``\lambda`` is the mean (and variance) of ``x``.
-"""
-
-# ╔═╡ bdee5a80-25ae-4789-bf19-6edad5ac8177
-PlutoUI.combine() do Child
-	@htl("""
-
-		$(Child(md"_Pick a value for_ ``\lambda``"))
-		$(Child(@bind lambda Slider(0:1:10, show_value=true)))
-	""")
-end
-
-# ╔═╡ d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
-Xmax = 20
-
-# ╔═╡ fc52477e-a124-4f5a-910a-4d6601b83ecf
-begin
-	function poi_plot(lambda)
-		poisson(i) = exp(-lambda) * lambda^i / factorial(big(i))
-
-		x = rand(num_iterations)*20
-		x = trunc.(x)
-
-		histogram(x, weights=poisson.(x), bins=0:20)
-	end
-
-	poi_plot(lambda)
-end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1468,28 +1293,15 @@ version = "1.4.1+1"
 
 # ╔═╡ Cell order:
 # ╟─25850900-1af5-11ef-32e8-65af8382c8a3
-# ╟─f3419d1a-7346-40ad-b3e0-10dde3e18646
-# ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
-# ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╟─15dae776-aecb-4c40-bf90-41e76567d664
-# ╠═8ad17213-ff54-4f58-be56-93635c03b4ab
-# ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-# ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
-# ╟─6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
-# ╠═d8c9f643-cfc5-4371-938c-0b0f4836daab
 # ╠═299b3b70-8c4f-4a72-af85-d4422ffa90aa
 # ╠═31f3a2b5-2933-4485-9a9d-8b6b3b30345a
 # ╠═e1a8499f-9f3c-4b7e-9382-52444b9ad41c
 # ╟─27371758-fa6f-45f2-a835-076c4dbc7045
 # ╟─d000c772-2add-4038-8834-e464f04e5131
-# ╟─e3a18c66-b3e2-4cea-b06d-d857f59220ed
+# ╠═e3a18c66-b3e2-4cea-b06d-d857f59220ed
 # ╟─4d7c0301-6366-4005-a445-01c4dcba4a89
 # ╟─de53d74a-88e3-418e-8ccf-7894c051c48d
 # ╟─66f36ef0-31cf-4dde-af07-d138e6e5006e
 # ╟─8b48e359-b8f7-4904-9717-b0bea59aad99
-# ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
-# ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
-# ╟─d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
-# ╟─fc52477e-a124-4f5a-910a-4d6601b83ecf
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
