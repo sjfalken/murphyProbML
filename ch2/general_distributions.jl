@@ -181,6 +181,15 @@ end
 
 
 
+# ╔═╡ 76961591-b2b6-4327-9f24-c515bea486e2
+md"""
+It can also be shown that the Poisson distribution is a special case of the negative binomial, namely:
+
+```math
+\text{Poi}(\lambda) = \text{lim}_{r \to \infty}\text{NegBinom}\left(r, \frac{\lambda}{1+\lambda }\right)
+```
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1303,5 +1312,6 @@ version = "1.4.1+1"
 # ╟─de53d74a-88e3-418e-8ccf-7894c051c48d
 # ╟─66f36ef0-31cf-4dde-af07-d138e6e5006e
 # ╟─8b48e359-b8f7-4904-9717-b0bea59aad99
+# ╟─76961591-b2b6-4327-9f24-c515bea486e2
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

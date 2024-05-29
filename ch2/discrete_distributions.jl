@@ -205,6 +205,23 @@ Let there be ``x + r`` trials with two possible outcomes in each trial, where ``
 \text{NegBinom}(x | r, p) \triangleq {x + r - 1 \choose x}(1-p)^rp^x
 ```
 
+for ``x \in \{0, 1, 2, \ldots\}``. If ``r \in \mathbb{R}``, then we can use the Gamma distribution with the fact that ``(x - 1)! = \Gamma (x)`` to write:
+
+```math
+\text{NegBinom}(x | r, p) = \frac{\Gamma(x+r)}{x!\Gamma (r)}(1-p)^rp^x
+```
+
+The first two moments (mean and variance) of this distribution are:\
+
+```math
+\mathbb{E}[x] = \frac{pr}{1 - p}, \mathbb{V}[x] = \frac{pr}{(1 - p)^2}
+```
+
+The negative binomial has more modeling flexibility than the Poisson due to modeling mean and variance separately. In fact, the Poisson distribution is a special case of the negative binomial. Another special case occurs when ``r = 1``, called the **Geometric Distribution**.
+
+```math
+\text{Geo}(x | p) \triangleq (1-p)p^x
+```
 """
 
 # ╔═╡ 3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
@@ -212,7 +229,7 @@ Let there be ``x + r`` trials with two possible outcomes in each trial, where ``
 PlutoUI.combine() do Child
 	@htl("""
 		$(Child(md"_Pick a value for_ p"))
-		$(Child(@bind p Slider(0:0.01:1, show_value=true)))
+		$(Child(@bind p Slider(0:0.01:.99, show_value=true)))
 		$(Child(md"_Pick a value for_ ``r``"))
 		$(Child(@bind r Slider(1:100, show_value=true)))
 	""")
@@ -243,7 +260,7 @@ begin
 		histogram(results, label="Number of trials that had $(md"``x``") 'success' results", bins=0:(r*4 - 1))
 		title!("Negative Binomial distribution, $(num_iterations) iterations")
 		# ylims!(0, num_iterations / 2)
-		
+		xlims!(0, r*5)
 		xlabel!("$(md"``x``")")
 	end
 
@@ -1375,8 +1392,8 @@ version = "1.4.1+1"
 # ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
 # ╟─d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
 # ╟─fc52477e-a124-4f5a-910a-4d6601b83ecf
-# ╟─ba766651-0a8b-4f52-a275-653b04190f50
-# ╟─3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
+# ╠═ba766651-0a8b-4f52-a275-653b04190f50
+# ╠═3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
 # ╠═103d6097-b840-41a3-96e0-0df5863030ac
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
