@@ -196,6 +196,60 @@ begin
 	poi_plot(lambda)
 end
 
+# ╔═╡ ba766651-0a8b-4f52-a275-653b04190f50
+md"""
+##### (2.2.1.4) Negative Binomial Distribution
+Let there be ``x + r`` trials with two possible outcomes in each trial, where ``x`` is the number of successful trials and ``r`` is the number of failed trials. The chance of success is ``p``. The **Negative Binomial Distribution** appears similiar to the Binomial distribution. However, instead of conditioning on the number of trials, it conditions on ``r`` failures happening before ``x`` successes. 
+
+```math
+\text{NegBinom}(x | r, p) \triangleq {x + r - 1 \choose x}(1-p)^rp^x
+```
+
+"""
+
+# ╔═╡ 3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
+
+PlutoUI.combine() do Child
+	@htl("""
+		$(Child(md"_Pick a value for_ p"))
+		$(Child(@bind p Slider(0:0.01:1, show_value=true)))
+		$(Child(md"_Pick a value for_ ``r``"))
+		$(Child(@bind r Slider(1:100, show_value=true)))
+	""")
+end
+
+
+# ╔═╡ 103d6097-b840-41a3-96e0-0df5863030ac
+begin
+	function neg_binom_plot(r, p)
+		results = zeros(num_iterations)
+		success_count = 0
+		for i in 1:num_iterations
+			fail_count = 0
+			success_count = 0
+
+			while fail_count < r
+				input = rand()
+				if input < p
+					success_count += 1
+				else
+					fail_count += 1
+				end
+			end
+			
+			results[i] = success_count
+		end
+
+		histogram(results, label="Number of trials that had $(md"``x``") 'success' results", bins=0:(r*4 - 1))
+		title!("Negative Binomial distribution, $(num_iterations) iterations")
+		# ylims!(0, num_iterations / 2)
+		
+		xlabel!("$(md"``x``")")
+	end
+
+	neg_binom_plot(r, p)
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1310,8 +1364,8 @@ version = "1.4.1+1"
 # ╟─25850900-1af5-11ef-32e8-65af8382c8a3
 # ╟─f3419d1a-7346-40ad-b3e0-10dde3e18646
 # ╟─fbf9ef6f-e715-4c41-81cd-4c08b6129dac
-# ╟─be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╟─15dae776-aecb-4c40-bf90-41e76567d664
+# ╠═be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
+# ╠═15dae776-aecb-4c40-bf90-41e76567d664
 # ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
 # ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
 # ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
@@ -1321,5 +1375,8 @@ version = "1.4.1+1"
 # ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
 # ╟─d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
 # ╟─fc52477e-a124-4f5a-910a-4d6601b83ecf
+# ╟─ba766651-0a8b-4f52-a275-653b04190f50
+# ╟─3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
+# ╠═103d6097-b840-41a3-96e0-0df5863030ac
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
