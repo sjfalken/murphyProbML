@@ -14,271 +14,72 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 25850900-1af5-11ef-32e8-65af8382c8a3
-using PlutoUI, HypertextLiteral, Plots, LaTeXStrings, StatsBase
+# ╔═╡ 039e8e07-c0ab-4cd6-88d8-f18e19e0551a
+using PlutoUI, HypertextLiteral, Plots, StatsBase
 
-# ╔═╡ f3419d1a-7346-40ad-b3e0-10dde3e18646
+# ╔═╡ a29e381e-889a-4a60-8011-f0a2c0b9078b
 num_iterations = 200
 
-# ╔═╡ fbf9ef6f-e715-4c41-81cd-4c08b6129dac
+
+# ╔═╡ de242670-1db2-11ef-18e2-5b9af901329a
 md"""
-##### (2.2.1.1) Bernoulli and binomial distributions
-
-Let ``x \in \{0, 1, \ldots, N\}``. then the **binomial distribution** is
+##### (2.2.2.1) Gaussian (Normal) distribution
+This is a widely used distribution, and is defined as follows:
 ```math
-\text{Bin}(x|N, \mu) \triangleq {N \choose x} \mu^x(1 - \mu)^{N - x}
-
+\mathcal{N}(x|\mu, \sigma^2) \triangleq \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2\sigma^2}(x-\mu)^2}
 ```
 
-if ``N = 1``, then ``x \in \{0, 1\}`` and this reduces to the **Bernoulli distribution**:
+where ``\sqrt{2\pi\sigma^2}`` is a normalization constant needed to ensure the PDF integrates to ``1``. The parameter ``\mu`` represents the mean and mode of the distribution. The parameter ``\sigma^2`` represents the variance. 
+
+The CDF of a Gaussian is:
+
 ```math
-\text{Ber}(x|\mu) =
-\begin{cases}
-	 1 - \mu & \text{if } x=0\\ \mu & \text{if } x = 1
-\end{cases}
+\Phi(x; \mu, \sigma^2) \triangleq \int_{-\infty}^x\mathcal{N}(z|\mu, \sigma^2)dz
+
 ```
+If ``\mu = 0`` and ``\sigma = 1`` (known as the **standard normal** distribution), we can just write ``\Phi(x)``. 
+
 """
 
-
-# ╔═╡ be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-
+# ╔═╡ 93289b2f-54d9-4140-aa33-2e5d5482027f
 PlutoUI.combine() do Child
 	@htl("""
 		$(Child(md"_Pick a value for_ ``\mu``"))
-		$(Child(@bind mu Slider(0:0.01:1, show_value=true)))
-		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N_binom Slider(1:100, show_value=true)))
+		$(Child(@bind mean Slider(-5:0.1:5, default=0, show_value=true)))
+		$(Child(md"_Pick a value for_ ``\sigma^2``"))
+		$(Child(@bind var Slider(1:10, show_value=true)))
 	""")
 end
 
-# ╔═╡ 15dae776-aecb-4c40-bf90-41e76567d664
+# ╔═╡ a7cf3a76-c16d-4114-9a84-eaf0d9276574
 begin
-	function binom_plot(mu, N)
-		results = zeros(num_iterations)
-		success_count = 0
-		for i in 1:num_iterations
-			input = rand(N)
-			results[i] = count(x -> x < mu, input)
-		end
+	function gaus_plot(mean, var)
+		gaussian(z) = 1/sqrt(2* pi * var) * exp(-(z - mean) ^ 2/ (2^var))
 
-		histogram(results, label="Number of trials that had $(md"``x``") 'success' results"; bin=range(0; stop=N))
-		title!("Binomial distribution, $(num_iterations) iterations")
-		ylims!(0, num_iterations)
-		xlims!(0, N)
-		xlabel!("$(md"``x``")")
+
+		sample_range = (-4*sqrt(var) + mean):0.01:(4*sqrt(var) + mean)
+		
+		samples = [wsample(sample_range, gaussian.(sample_range)) for _ in 1:num_iterations]
+		histogram(samples, normalize=:pdf, bins=-20:1:20)
+		xlims!(-20, 20)
+		ylims!(0, .4)
 	end
 
-	binom_plot(mu, N_binom)
-end
 
-# ╔═╡ 8ad17213-ff54-4f58-be56-93635c03b4ab
-md"""
-##### (2.2.1.2) Categorical and multinomial distributions
-Let ``x \in \{1, 2, \ldots, K\}``. then the **categorical distribution** is defined by:
-```math
-\text{Cat}(x| \boldsymbol{\theta}) \triangleq \prod_{k=1}^{K}\theta_k^{\mathbb{I}(x=k)}
-
-```
-where ``\mathbb{I}(x=k)`` is the _indicator_ function (equivalent to ``1`` if ``x=k`` and ``0`` otherwise).
-This distribution is a generalization of the Bernoulli distribution (when there are more than two outcomes). Consequently, the **multinomial distribution** is a generalization of the Binomial distribution. It defines the case where a discrete value is sampled over ``N`` trials.
-
-```math
-\text{Mul}(\mathbf{x}|N, \boldsymbol{\theta}) \triangleq {N \choose x_1 \ldots x_K} \prod_{k=1}^{K}\theta_k^{x_k}
-```
-
-where the ``k``th element of ``\mathbf{x}`` counts the number of times the value ``k`` is seen in ``N = \sum_{k=1}^{K}x_k`` trials.
-"""
-
-# ╔═╡ 1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-PlutoUI.combine() do Child
-	@htl("""
-		$(Child(md"_Pick a value for_ ``K``"))
-		$(Child(@bind K Slider(1:1:10, show_value=true)))
-		$(Child(md"_Pick a value for_ ``N``"))
-		$(Child(@bind N_multinom Slider(1:1:1000, show_value=true)))
-	""")
-end
-
-# ╔═╡ 4a8e0817-6912-41bc-9b37-4e31deab85d9
-@bind inputvals PlutoUI.combine() do Child
-	@htl("""
-		$(Child("prompt", md"_Pick weights for each_ ``\theta_k``"))
-
-		<div>
-			$([ @htl("""
-				<div style="display:flex;flex-direction:row">
-					$(Child("theta$(i)", Slider(0.01:0.01:1,default=1, show_value=true)))
-				</div>
-			""")
-			for i in 1:K])
-		</div>
-	""")
-
-end
-
-# ╔═╡ 6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
-begin
-	thetas = zeros(K)
-	for i in 1:K
-		thetas[i] = inputvals[Symbol("theta$i")]
-	end
-
-	totalsum = sum(thetas)
-
-	weights = zeros(K)
-
-	for i in 1:K
-		weights[i] = thetas[i] / totalsum
-	end
-
-end
-
-# ╔═╡ d8c9f643-cfc5-4371-938c-0b0f4836daab
-begin
-	function multinom_plot(N)
-
-		results = zeros(K, num_iterations)
-		for i in 1:num_iterations
-			samples = [wsample(1:K, weights) for _ in 1:N]
-
-			counts = [count(x -> x == j, samples) for j in 1:K]
-
-
-			results[:, i] += counts
-		end
-		plot()
-		[stephist!(results[i, :], label=L"k_{%$(i)}") for i in 1:K]
-	end
-
-	multinom_plot(N_multinom)
-
-	title!("Multinomial distribution with $(num_iterations) iterations")
-	xlabel!("count of $(md"``k_i``") over $(md"``N``") samples")
-
-end
-
-
-
-# ╔═╡ 35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
-md"""
-##### (2.2.1.3) Poisson distribution
-Let ``X \in \{0, 1, 2, \ldots\}``. then the **Poisson distribution** with parameter ``\lambda > 0`` is defined by:
-```math
-\text{Poi}(x| \lambda ) \triangleq e^{-\lambda}\frac{\lambda^x}{x!}
-```
-
-where ``\lambda`` is the mean (and variance) of ``x``.
-"""
-
-# ╔═╡ bdee5a80-25ae-4789-bf19-6edad5ac8177
-PlutoUI.combine() do Child
-	@htl("""
-
-		$(Child(md"_Pick a value for_ ``\lambda``"))
-		$(Child(@bind lambda Slider(0:1:10, show_value=true)))
-	""")
-end
-
-# ╔═╡ d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
-Xmax = 20
-
-# ╔═╡ fc52477e-a124-4f5a-910a-4d6601b83ecf
-begin
-	function poi_plot(lambda)
-		poisson(i) = exp(-lambda) * lambda^i / factorial(big(i))
-
-		x = rand(num_iterations)*20
-		x = trunc.(x)
-
-		histogram(x, weights=poisson.(x), bins=0:20)
-	end
-
-	poi_plot(lambda)
-end
-
-# ╔═╡ ba766651-0a8b-4f52-a275-653b04190f50
-md"""
-##### (2.2.1.4) Negative Binomial Distribution
-Let there be ``x + r`` trials with two possible outcomes in each trial, where ``x`` is the number of successful trials and ``r`` is the number of failed trials. The chance of success is ``p``. The **Negative Binomial Distribution** appears similiar to the Binomial distribution. However, instead of conditioning on the number of trials, it conditions on ``r`` failures happening before ``x`` successes. 
-
-```math
-\text{NegBinom}(x | r, p) \triangleq {x + r - 1 \choose x}(1-p)^rp^x
-```
-
-for ``x \in \{0, 1, 2, \ldots\}``. If ``r \in \mathbb{R}``, then we can use the Gamma distribution with the fact that ``(x - 1)! = \Gamma (x)`` to write:
-
-```math
-\text{NegBinom}(x | r, p) = \frac{\Gamma(x+r)}{x!\Gamma (r)}(1-p)^rp^x
-```
-
-The first two moments (mean and variance) of this distribution are:\
-
-```math
-\mathbb{E}[x] = \frac{pr}{1 - p}, \mathbb{V}[x] = \frac{pr}{(1 - p)^2}
-```
-
-The negative binomial has more modeling flexibility than the Poisson due to modeling mean and variance separately. In fact, the Poisson distribution is a special case of the negative binomial. Another special case occurs when ``r = 1``, called the **Geometric Distribution**.
-
-```math
-\text{Geo}(x | p) \triangleq (1-p)p^x
-```
-"""
-
-# ╔═╡ 3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
-
-PlutoUI.combine() do Child
-	@htl("""
-		$(Child(md"_Pick a value for_ p"))
-		$(Child(@bind p Slider(0:0.01:.99, show_value=true)))
-		$(Child(md"_Pick a value for_ ``r``"))
-		$(Child(@bind r Slider(1:100, show_value=true)))
-	""")
-end
-
-
-# ╔═╡ 103d6097-b840-41a3-96e0-0df5863030ac
-begin
-	function neg_binom_plot(r, p)
-		results = zeros(num_iterations)
-		success_count = 0
-		for i in 1:num_iterations
-			fail_count = 0
-			success_count = 0
-
-			while fail_count < r
-				input = rand()
-				if input < p
-					success_count += 1
-				else
-					fail_count += 1
-				end
-			end
-			
-			results[i] = success_count
-		end
-
-		histogram(results, label="Number of trials that had $(md"``x``") 'success' results", bins=0:(r*4 - 1))
-		title!("Negative Binomial distribution, $(num_iterations) iterations")
-		# ylims!(0, num_iterations / 2)
-		xlims!(0, r*5)
-		xlabel!("$(md"``x``")")
-	end
-
-	neg_binom_plot(r, p)
+	
+	gaus_plot(mean, var)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 HypertextLiteral = "~0.9.5"
-LaTeXStrings = "~1.3.1"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
 StatsBase = "~0.34.3"
@@ -290,7 +91,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "c6e3ccdbe2e300417baa48f55489c2cb22366513"
+project_hash = "28524ae8212b9c37126fd3cb21ad9288255c4db9"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -854,9 +655,9 @@ version = "1.10.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
-git-tree-sha1 = "1f03a2d339f42dca4a4da149c7e15e9b896ad899"
+git-tree-sha1 = "6e55c6841ce3411ccb3457ee52fc48cb698d6fb0"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
-version = "3.1.0"
+version = "3.2.0"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "Statistics"]
@@ -1378,22 +1179,10 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─25850900-1af5-11ef-32e8-65af8382c8a3
-# ╟─f3419d1a-7346-40ad-b3e0-10dde3e18646
-# ╠═fbf9ef6f-e715-4c41-81cd-4c08b6129dac
-# ╠═be5e0a38-2914-4f10-9dd3-f4a45dbaa55a
-# ╠═15dae776-aecb-4c40-bf90-41e76567d664
-# ╟─8ad17213-ff54-4f58-be56-93635c03b4ab
-# ╟─1cd4acf3-13f3-4355-8efb-cca6b0ee413e
-# ╟─4a8e0817-6912-41bc-9b37-4e31deab85d9
-# ╟─6f60fdc9-a5c5-4f31-bcd3-2d45d2f7fd04
-# ╟─d8c9f643-cfc5-4371-938c-0b0f4836daab
-# ╟─35f7ccc3-b6ad-474e-ab93-5dd0be2c39e5
-# ╟─bdee5a80-25ae-4789-bf19-6edad5ac8177
-# ╠═d5f4d721-81b1-4cd0-9f65-9f39c5a8ee68
-# ╠═fc52477e-a124-4f5a-910a-4d6601b83ecf
-# ╠═ba766651-0a8b-4f52-a275-653b04190f50
-# ╠═3f7fa68f-1c3f-4b31-b414-74cbb939b3ba
-# ╠═103d6097-b840-41a3-96e0-0df5863030ac
+# ╠═039e8e07-c0ab-4cd6-88d8-f18e19e0551a
+# ╠═a29e381e-889a-4a60-8011-f0a2c0b9078b
+# ╟─de242670-1db2-11ef-18e2-5b9af901329a
+# ╠═93289b2f-54d9-4140-aa33-2e5d5482027f
+# ╠═a7cf3a76-c16d-4114-9a84-eaf0d9276574
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
